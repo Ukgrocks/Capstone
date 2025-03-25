@@ -137,6 +137,8 @@ const MuseumMap: React.FC = () => {
        <h1 className="text-xl font-semibold mb-2">Indian Museums</h1>
       <MapContainer
         center={[20.5937, 78.9629]} // Centered on India
+        minZoom={4}
+        maxZoom={10}
         zoom={5}
         style={{ height: "600px", width: "100%" }}
         maxBounds={indiaBounds} // Restrict map to India

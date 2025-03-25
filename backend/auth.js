@@ -9,6 +9,22 @@ import User from './model.js'; // Import the User model
 const router = Router();
 const JWT_SECRET = "220495"; // ✅ Use environment variable
 
+const authMiddleware = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+      return res.status(401).json({ message: "No token, authorization denied" });
+  }
+
+  try {
+      const decoded = verify(token, JWT_SECRET);
+      req.user = decoded.user;
+      next();
+  } catch (error) {
+      return res.status(403).json({ message: "Invalid token" });
+  }
+};
+
 // User Login Route
 router.post(
   '/',
@@ -46,6 +62,7 @@ router.post(
   }
 );
 
+
 // Get Logged-in User
 router.get('/me', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1]; // ✅ Get token safely
@@ -68,5 +85,23 @@ router.get('/me', async (req, res) => {
     return res.status(403).json({ msg: 'Invalid token' }); // ✅ 403 for Forbidden
   }
 });
+
+router.post("/update-travel-list", authMiddleware, async (req, res) => {
+  try {
+      const { travelList } = req.body;
+      const user = await User.findByIdAndUpdate(
+          req.user.id,
+          { travelList },
+          { new: true }
+      );
+
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      res.json({ message: "Travel list updated", travelList: user.travelList });
+  } catch (error) {
+      res.status(500).json({ message: "Error updating travel list" });
+  }
+});
+
 
 export default router;

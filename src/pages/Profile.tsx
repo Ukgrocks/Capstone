@@ -1,12 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, PlusCircle, Trash2 } from "lucide-react";
 import axios from "axios";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ fullname: string; useremail: string } | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // ✅ Added loading state
+  const [user, setUser] = useState<{ fullname: string; useremail: string; travelList: string[] }>({
+    fullname: "",
+    useremail: "",
+    travelList: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [newPlace, setNewPlace] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -23,10 +28,10 @@ const Profile = () => {
         setUser(response.data);
       } catch (error) {
         console.error("Failed to fetch user:", error);
-        localStorage.removeItem("token"); // ✅ Remove invalid token
+        localStorage.removeItem("token");
         navigate("/login");
       } finally {
-        setIsLoading(false); // ✅ Stop loading
+        setIsLoading(false);
       }
     };
 
@@ -36,6 +41,40 @@ const Profile = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  const addPlace = async () => {
+    if (!newPlace.trim()) return;
+    const updatedList = [...user.travelList, newPlace];
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post("http://localhost:5000/login/update-travel-list",
+        { travelList: updatedList },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUser((prev) => ({ ...prev, travelList: updatedList }));
+      setNewPlace("");
+    } catch (error) {
+      console.error("Failed to update travel list:", error);
+    }
+  };
+
+  const removePlace = async (place: string) => {
+    const updatedList = user.travelList.filter((p) => p !== place);
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        "http://localhost:5000/login/update-travel-list",
+        { travelList: updatedList },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setUser((prev) => ({ ...prev, travelList: updatedList }));
+    } catch (error) {
+      console.error("Failed to update travel list:", error);
+    }
   };
 
   if (isLoading) {
@@ -73,20 +112,42 @@ const Profile = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-600">Name</label>
-                <div className="mt-1 p-3 bg-gray-50 rounded-md">
-                  {user?.fullname || "N/A"}
-                </div>
+                <div className="mt-1 p-3 bg-gray-50 rounded-md">{user.fullname || "N/A"}</div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-600">Email</label>
-                <div className="mt-1 p-3 bg-gray-50 rounded-md">
-                  {user?.useremail || "N/A"}
+                <div className="mt-1 p-3 bg-gray-50 rounded-md">{user.useremail || "N/A"}</div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Your Travel List</label>
+                <div className="mt-2 space-y-2">
+                  {user.travelList.map((place, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-white rounded-lg shadow-md border border-gray-200 hover:bg-gray-100 transition">
+                      <span className="font-medium text-gray-800">{place}</span>
+                      <button onClick={() => removePlace(place)} className="text-red-500 hover:text-red-700 transition">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex mt-4">
+                  <input
+                    type="text"
+                    value={newPlace}
+                    onChange={(e) => setNewPlace(e.target.value)}
+                    placeholder="Add a place..."
+                    className="flex-1 p-3 border border-gray-300 rounded-l-md focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                  />
+                  <button onClick={addPlace} className="bg-orange-700 text-white px-4 py-3 rounded-r-md hover:bg-orange-800 transition">
+                    <PlusCircle className="w-6 h-6" />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>

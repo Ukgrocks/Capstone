@@ -1,5 +1,6 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import './i18n'; // Import the i18n configuration
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -8,15 +9,33 @@ import Signup from './pages/Signup';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
-// import { AuthProvider } from './contexts/AuthContext';
 
-function App() {
+const App: React.FC = () => {
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
   return (
     <>
-    {/* <AuthProvider> */}
       <BrowserRouter>
         <div className="min-h-screen flex flex-col bg-stone-50">
           <Navbar />
+          <div className="flex justify-end p-4">
+            <label className="mr-2">{t('select_language')}:</label>
+            <select
+              onChange={(e) => changeLanguage(e.target.value)}
+              className="border p-1"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिन्दी</option>
+              <option value="ta">தமிழ்</option>
+              <option value="mr">मराठी</option>
+              <option value="te">తెలుగు</option>
+              <option value="bn">বাংলা</option>
+            </select>
+          </div>
           <main className="flex-grow">
             <Routes>
               <Route path="/" element={<Home />} />
@@ -33,11 +52,8 @@ function App() {
           <Footer />
         </div>
       </BrowserRouter>
-      
-    {/* </AuthProvider> */}
-    <script src="https://widget.flowxo.com/embed.js" data-fxo-widget="eyJ0aGVtZSI6IiM0NzE0ZTAiLCJ3ZWIiOnsiYm90SWQiOiI2NzMyZTM0YWNkMzJmMDAwNTZjNzczM2YiLCJ0aGVtZSI6IiM0NzE0ZTAiLCJsYWJlbCI6IlRyYXZlbEhlbHBlciAtIE11c2V1bU1hdGUifX0=" async defer></script>
     </>
   );
-}
+};
 
 export default App;
